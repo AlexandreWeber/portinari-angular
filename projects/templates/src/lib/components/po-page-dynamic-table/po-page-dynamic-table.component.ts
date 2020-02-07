@@ -1,6 +1,6 @@
 import { PoPageDynamicOptionsSchema } from './../../services/po-page-customization/po-page-dynamic-options.interface';
 import { ActivatedRoute, Route, Router } from '@angular/router';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { Subscription, Observable } from 'rxjs';
 
 import {
@@ -98,7 +98,7 @@ export const poPageDynamicTableLiteralsDefault = {
   templateUrl: './po-page-dynamic-table.component.html',
   providers: [ PoPageDynamicService ]
 })
-export class PoPageDynamicTableComponent extends PoPageDynamicListBaseComponent implements OnInit {
+export class PoPageDynamicTableComponent extends PoPageDynamicListBaseComponent implements OnInit, OnDestroy {
 
   private _actions: PoPageDynamicTableActions = {};
   private _pageActions: Array<PoPageAction> = [];
@@ -186,6 +186,11 @@ export class PoPageDynamicTableComponent extends PoPageDynamicListBaseComponent 
     }
   }
 
+  ngOnDestroy() {
+    if (this.loadSubscription) {
+      this.loadSubscription.unsubscribe();
+    }
+  }
   onAdvancedSearch(filter) {
     this.loadData({ page: 1, ...filter });
     this.params = filter;
@@ -451,8 +456,7 @@ export class PoPageDynamicTableComponent extends PoPageDynamicListBaseComponent 
         },
         {
           nameProp: 'actions',
-          merge: true,
-          keyForMerge: 'label'
+          merge: true
         },
         {
           nameProp: 'breadcrumb'

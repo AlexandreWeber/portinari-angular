@@ -14,7 +14,7 @@ import { PoPageDynamicDetailComponent } from '../po-page-dynamic-detail/po-page-
 
 import { PoPageDynamicTableComponent } from './po-page-dynamic-table.component';
 
-fdescribe('PoPageDynamicTableComponent:', () => {
+describe('PoPageDynamicTableComponent:', () => {
   let component: PoPageDynamicTableComponent;
   let fixture: ComponentFixture<PoPageDynamicTableComponent>;
 
@@ -157,7 +157,9 @@ fdescribe('PoPageDynamicTableComponent:', () => {
         };
 
         component.ngOnInit();
+
         tick();
+
         expect(component.title).toBe('New Title');
         expect(component.actions).toEqual({
           detail:  '/new_datail',
@@ -175,6 +177,7 @@ fdescribe('PoPageDynamicTableComponent:', () => {
             { label: 'Test2' }
           ]
         });
+
       }));
     });
 
