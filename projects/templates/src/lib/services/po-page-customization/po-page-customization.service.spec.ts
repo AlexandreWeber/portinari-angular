@@ -4,6 +4,7 @@ import { HttpTestingController, HttpClientTestingModule } from '@angular/common/
 
 import { PoPageCustomizationService } from './po-page-customization.service';
 import { PoPageDynamicSearchOptions } from '../../components/po-page-dynamic-search/po-page-dynamic-search-options.interface';
+import { isArray } from 'util';
 
 const originalPageOptions: PoPageDynamicSearchOptions = {
   title: 'Original Title',
@@ -23,13 +24,33 @@ const originalPageOptions: PoPageDynamicSearchOptions = {
   ]
 };
 
+const newPageOptions: PoPageDynamicSearchOptions = {
+  title: 'New Title',
+  breadcrumb: {
+    items: [
+      { label: 'Test' },
+      { label: 'Test2' }
+    ],
+    favorite: 'teste/teste'
+  },
+  actions: [
+    { label: 'Feature 1', url: '/new-feature1' },
+    { label: 'Feature 3', url: '/new-feature3' }
+  ],
+  filters: [
+    { property: 'filter1' },
+    { property: 'filter3' }
+  ]
+};
+
 const mergedPageOptions: PoPageDynamicSearchOptions = {
   title: 'New Title',
   breadcrumb: {
     items: [
       { label: 'Test' },
       { label: 'Test2' }
-    ]
+    ],
+    favorite: 'teste/teste'
   },
   actions: [
     { label: 'Feature 1', url: '/new-feature1' },
@@ -39,24 +60,6 @@ const mergedPageOptions: PoPageDynamicSearchOptions = {
   filters: [
     { property: 'filter1' },
     { property: 'filter2' },
-    { property: 'filter3' }
-  ]
-};
-
-const newPageOptions: PoPageDynamicSearchOptions = {
-  title: 'New Title',
-  breadcrumb: {
-    items: [
-      { label: 'Test' },
-      { label: 'Test2' }
-    ]
-  },
-  actions: [
-    { label: 'Feature 1', url: '/new-feature1' },
-    { label: 'Feature 3', url: '/new-feature3' }
-  ],
-  filters: [
-    { property: 'filter1' },
     { property: 'filter3' }
   ]
 };
@@ -74,7 +77,8 @@ const pageOptionSchema: PoPageDynamicOptionsSchema<PoPageDynamicSearchOptions> =
       keyForMerge: 'label'
     },
     {
-      nameProp: 'breadcrumb'
+      nameProp: 'breadcrumb',
+      merge: true
     },
     {
       nameProp: 'title'

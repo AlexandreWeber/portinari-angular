@@ -1,5 +1,7 @@
+import { PoPageDynamicOptionsSchema } from './../../services/po-page-customization/po-page-dynamic-options.interface';
 import { ActivatedRoute, Route, Router } from '@angular/router';
 import { Component, Input, OnInit } from '@angular/core';
+import { Subscription, Observable } from 'rxjs';
 
 import {
   PoDialogConfirmOptions,
@@ -14,11 +16,14 @@ import {
 import * as util from '../../utils/util';
 
 import { PoPageDynamicDetailComponent } from '../po-page-dynamic-detail/po-page-dynamic-detail.component';
-// import { PoPageDynamicEditComponent } from '../po-page-dynamic-edit/po-page-dynamic-edit.component';
 
 import { PoPageDynamicListBaseComponent } from './po-page-dynamic-list-base.component';
 import { PoPageDynamicService } from './po-page-dynamic.service';
 import { PoPageDynamicTableActions } from './po-page-dynamic-table-actions.interface';
+import { PoPageDynamicTableOptions } from './po-page-dynamic-table-options.interface';
+import { PoPageCustomizationService } from './../../services/po-page-customization/po-page-customization.service';
+
+type UrlOrPoCustomizationFunction = string | (() => PoPageDynamicTableOptions );
 
 export const poPageDynamicTableLiteralsDefault = {
   en: {
@@ -102,6 +107,7 @@ export class PoPageDynamicTableComponent extends PoPageDynamicListBaseComponent 
   private page: number = 1;
   private params = {};
   private sortedColumn: PoTableColumnSort;
+  private loadSubscription: Subscription;
 
   hasNext = false;
   items = [];
@@ -109,6 +115,38 @@ export class PoPageDynamicTableComponent extends PoPageDynamicListBaseComponent 
     ...poPageDynamicTableLiteralsDefault[util.poLocaleDefault],
     ...poPageDynamicTableLiteralsDefault[util.browserLanguage()]
   };
+
+  /**
+   * Função ou serviço que será executado na inicialização do componente.
+   *
+   * A propriedade aceita os seguintes tipos:
+   * - `string`: *Endpoint* usado pelo componente para requisição via `POST`.
+   * - `function`: Método que será executado.
+   *
+   * O retorno desta função deve ser do tipo `PoPageDynamicTableOptions`,
+   * onde o usuário poderá customizar novos campos, breadcrumb, title e actions
+   *
+   * Por exemplo:
+   *
+   * ```
+   * getPageOptions(): PoPageDynamicTableOptions {
+   * return {
+   *   actions: [
+   *     { label: 'Find on Google' },
+   *   ],
+   *   fields: [
+   *     { property: 'idCard', gridColumns: 6 }
+   *   ]
+   * };
+   * }
+   *
+   * ```
+   * Para referenciar a sua função utilize a propriedade `bind`, por exemplo:
+   * ```
+   *  [p-load]="onLoadOptions.bind(this)"
+   * ```
+   */
+  @Input('p-load') onLoad: string | (() => PoPageDynamicTableOptions );
 
   /**
    * @optional
@@ -134,22 +172,17 @@ export class PoPageDynamicTableComponent extends PoPageDynamicListBaseComponent 
     private activatedRoute: ActivatedRoute,
     private poDialogService: PoDialogService,
     private poNotification: PoNotificationService,
-    private poPageDynamicService: PoPageDynamicService
+    private poPageDynamicService: PoPageDynamicService,
+    private poPageCustomizationService: PoPageCustomizationService
     ) {
     super();
   }
 
   ngOnInit(): void {
-    if (this.activatedRoute.snapshot.data.serviceApi) {
-      this.serviceApi = this.activatedRoute.snapshot.data.serviceApi;
+    this.loadDataFromAPI();
 
-      this.poPageDynamicService.configServiceApi({ endpoint: this.serviceApi });
-
-      this.loadMetadata();
-    } else {
-      this.poPageDynamicService.configServiceApi({ endpoint: this.serviceApi });
-
-      this.loadData();
+    if (this.onLoad) {
+      this.loadOptionsOnInitialize(this.onLoad);
     }
   }
 
@@ -382,6 +415,55 @@ export class PoPageDynamicTableComponent extends PoPageDynamicListBaseComponent 
         }
       ];
     }
+  }
+
+  private loadDataFromAPI() {
+    if (this.activatedRoute.snapshot.data.serviceApi) {
+      this.serviceApi = this.activatedRoute.snapshot.data.serviceApi;
+      this.poPageDynamicService.configServiceApi({ endpoint: this.serviceApi });
+      this.loadMetadata();
+    } else {
+      this.poPageDynamicService.configServiceApi({ endpoint: this.serviceApi });
+      this.loadData();
+    }
+  }
+
+  private loadOptionsOnInitialize(onLoad: UrlOrPoCustomizationFunction) {
+
+    this.loadSubscription = this.getPoDynamicPageOptions(onLoad).subscribe(responsePoOption =>
+        this.poPageCustomizationService.changeOriginalOptionsToNewOptions(this, responsePoOption));
+  }
+
+  private getPoDynamicPageOptions(onLoad: UrlOrPoCustomizationFunction): Observable<PoPageDynamicTableOptions> {
+    const originalOption: PoPageDynamicTableOptions = {
+      fields: this.fields,
+      actions: this.actions,
+      breadcrumb: this.breadcrumb,
+      title: this.title
+    };
+
+    const pageOptionSchema: PoPageDynamicOptionsSchema<PoPageDynamicTableOptions> = {
+      schema: [
+        {
+          nameProp: 'fields',
+          merge: true,
+          keyForMerge: 'property'
+        },
+        {
+          nameProp: 'actions',
+          merge: true,
+          keyForMerge: 'label'
+        },
+        {
+          nameProp: 'breadcrumb'
+        },
+        {
+          nameProp: 'title'
+        }
+      ]
+    };
+
+    return this.poPageCustomizationService.getCustomOptions(onLoad, originalOption, pageOptionSchema);
   }
 
 }

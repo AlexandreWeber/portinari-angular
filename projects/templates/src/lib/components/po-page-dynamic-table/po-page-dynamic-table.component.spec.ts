@@ -11,11 +11,10 @@ import { PoDialogModule, PoNotificationModule, PoTableColumnSort, PoTableColumnS
 import * as utilsFunctions from '../../utils/util';
 import { configureTestSuite, expectPropertiesValues } from '../../util-test/util-expect.spec';
 import { PoPageDynamicDetailComponent } from '../po-page-dynamic-detail/po-page-dynamic-detail.component';
-// import { PoPageDynamicEditComponent } from '../po-page-dynamic-edit/po-page-dynamic-edit.component';
 
 import { PoPageDynamicTableComponent } from './po-page-dynamic-table.component';
 
-describe('PoPageDynamicTableComponent:', () => {
+fdescribe('PoPageDynamicTableComponent:', () => {
   let component: PoPageDynamicTableComponent;
   let fixture: ComponentFixture<PoPageDynamicTableComponent>;
 
@@ -75,49 +74,109 @@ describe('PoPageDynamicTableComponent:', () => {
 
   describe('Methods:', () => {
 
-    it('ngOnInit: should call `loadData` with `paramId` if `activatedRoute.snapshot.data.serviceApi` is falsy', () => {
-      const activatedRoute: any = {
-        snapshot: {
-          data: { }
-        }
-      };
-
-      component.serviceApi = 'localhost:4300/api/people';
-
-      spyOn(component, <any> 'loadData');
-      spyOn(component['poPageDynamicService'], <any> 'configServiceApi');
-
-      component['activatedRoute'] = activatedRoute;
-
-      component.ngOnInit();
-
-      expect(component['loadData']).toHaveBeenCalled();
-      expect(component['poPageDynamicService'].configServiceApi).toHaveBeenCalledWith({ endpoint: component.serviceApi });
-    });
-
-    it('ngOnInit: should call `loadMetadata` with `id` and set `serviceApi` if `activatedRoute.snapshot.data.serviceApi` is truthy',
-      () => {
+    describe('ngOnInit:', () => {
+      it('should call `loadData` with `paramId` if `activatedRoute.snapshot.data.serviceApi` is falsy', () => {
         const activatedRoute: any = {
           snapshot: {
-            data: {
-              serviceApi: 'localhost:4300/api/people'
-            }
+            data: { }
           }
         };
 
-        component.serviceApi = undefined;
+        component.serviceApi = 'localhost:4300/api/people';
 
-        spyOn(component, <any> 'loadMetadata');
+        spyOn(component, <any> 'loadData');
         spyOn(component['poPageDynamicService'], <any> 'configServiceApi');
 
         component['activatedRoute'] = activatedRoute;
 
         component.ngOnInit();
 
-        expect(component.serviceApi).toEqual(activatedRoute.snapshot.data.serviceApi);
-        expect(component['loadMetadata']).toHaveBeenCalled();
+        expect(component['loadData']).toHaveBeenCalled();
         expect(component['poPageDynamicService'].configServiceApi).toHaveBeenCalledWith({ endpoint: component.serviceApi });
       });
+
+      it('should call `loadMetadata` with `id` and set `serviceApi` if `activatedRoute.snapshot.data.serviceApi` is truthy',
+        () => {
+          const activatedRoute: any = {
+            snapshot: {
+              data: {
+                serviceApi: 'localhost:4300/api/people'
+              }
+            }
+          };
+
+          component.serviceApi = undefined;
+
+          spyOn(component, <any> 'loadMetadata');
+          spyOn(component['poPageDynamicService'], <any> 'configServiceApi');
+
+          component['activatedRoute'] = activatedRoute;
+
+          component.ngOnInit();
+
+          expect(component.serviceApi).toEqual(activatedRoute.snapshot.data.serviceApi);
+          expect(component['loadMetadata']).toHaveBeenCalled();
+          expect(component['poPageDynamicService'].configServiceApi).toHaveBeenCalledWith({ endpoint: component.serviceApi });
+      });
+
+      it('should configure properties based on the return of onload function', fakeAsync(() => {
+        component.actions = {
+          detail: '/datail',
+          edit: '/edit'
+        };
+        component.breadcrumb = {
+          items: [
+            { label: 'Home' },
+            { label: 'Hiring processes' }
+          ]
+        };
+        component.fields = [
+          { property: 'filter1' },
+          { property: 'filter2' }
+        ];
+        component.title = 'Original Title';
+
+        component.onLoad = () => {
+          return{
+            title:  'New Title',
+            breadcrumb: {
+              items: [
+                { label:  'Test' },
+                { label:  'Test2' }
+              ]
+            },
+            actions: {
+              detail:  '/new_datail',
+              new: '/new'
+            },
+            fields: [
+              { property:  'filter1' },
+              { property:  'filter3' }
+            ]
+          };
+        };
+
+        component.ngOnInit();
+        tick();
+        expect(component.title).toBe('New Title');
+        expect(component.actions).toEqual({
+          detail:  '/new_datail',
+          edit: '/edit',
+          new: '/new'
+        });
+        expect(component.fields).toEqual([
+          { property: 'filter1' },
+          { property: 'filter2' },
+          { property: 'filter3' }
+        ]);
+        expect(component.breadcrumb).toEqual({
+          items: [
+            { label: 'Test' },
+            { label: 'Test2' }
+          ]
+        });
+      }));
+    });
 
     it('onAdvancedSearch: should call `loadData` with filter parameter and set `params`', () => {
       const filter = 'filterValue';

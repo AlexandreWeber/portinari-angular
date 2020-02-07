@@ -61,13 +61,13 @@ export class PoPageCustomizationService {
 
   private createNewProp<T>(prop: PoPageDynamicOptionsProp<T>, originalOption: T, newPageOptions: T) {
     if (prop.merge) {
-      return this.mergeOptions(originalOption[prop.nameProp], newPageOptions[prop.nameProp], prop.keyForMerge  );
+        return this.mergeOptions(originalOption[prop.nameProp], newPageOptions[prop.nameProp], prop.keyForMerge  );
     } else {
       return newPageOptions[prop.nameProp] || originalOption[prop.nameProp];
     }
   }
 
-  private mergeOptions<T>(originalOptions: Array<T> , newOptions: Array<T > , filterProp: keyof T) {
+  private mergeOptions<T>(originalOptions: (Array<T> | T) , newOptions: (Array<T> | T) , filterProp?: keyof T) {
 
     if (!originalOptions && !newOptions) {
       return;
@@ -79,6 +79,15 @@ export class PoPageCustomizationService {
       return newOptions;
     }
 
+    if (originalOptions instanceof Array && newOptions instanceof Array ) {
+      return this.mergeOptionsArray(originalOptions, newOptions, filterProp);
+    }
+
+    return {...originalOptions, ...newOptions};
+
+  }
+
+  private mergeOptionsArray<T>(originalOptions: Array<T>, newOptions: Array<T>, filterProp: keyof T) {
     const deduplicateNewOptions = newOptions.filter(
       newItem => !originalOptions.find(originalItem => originalItem[filterProp] === newItem[filterProp]));
     const mergedOriginalOptions = originalOptions.map(originalItem => {
@@ -86,7 +95,6 @@ export class PoPageCustomizationService {
         return {...originalItem, ...newItem};
       }
     );
-
     return [...mergedOriginalOptions, ...deduplicateNewOptions];
   }
 }
