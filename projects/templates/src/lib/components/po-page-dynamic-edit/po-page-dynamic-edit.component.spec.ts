@@ -274,7 +274,8 @@ describe('PoPageDynamicEditComponent: ', () => {
 
       component.ngOnInit();
 
-      expect(component['poPageDynamicService'].configServiceApi).toHaveBeenCalledWith({ endpoint: component.serviceApi });
+      expect(component['poPageDynamicService'].configServiceApi)
+        .toHaveBeenCalledWith({ endpoint: component.serviceApi, metadata: undefined });
       expect(component['loadData']).toHaveBeenCalledWith(id, duplicate);
 
       expect(component['loadMetadata']).not.toHaveBeenCalled();
@@ -288,7 +289,8 @@ describe('PoPageDynamicEditComponent: ', () => {
         const activatedRoute: any = {
           snapshot: {
             data: {
-              serviceApi: 'localhost:4300/api/people'
+              serviceApi: 'localhost:4300/api/people',
+              serviceMetadataApi: 'metadata'
             },
             params: { id },
             queryParams: { duplicate }
@@ -306,7 +308,8 @@ describe('PoPageDynamicEditComponent: ', () => {
 
         component.ngOnInit();
 
-        expect(component['poPageDynamicService'].configServiceApi).toHaveBeenCalledWith({ endpoint: component.serviceApi });
+        expect(component['poPageDynamicService'].configServiceApi)
+          .toHaveBeenCalledWith({ endpoint: component.serviceApi, metadata: 'metadata' });
         expect(component['loadMetadata']).toHaveBeenCalledWith(id, duplicate);
 
         expect(component['loadData']).not.toHaveBeenCalled();
