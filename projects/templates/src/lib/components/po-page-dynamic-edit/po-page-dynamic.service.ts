@@ -8,7 +8,7 @@ import { map } from 'rxjs/operators';
 export class PoPageDynamicService {
 
   private endpoint = '/';
-  private metadata = 'metadata';
+  private metadata: string;
 
   readonly headers: HttpHeaders = new HttpHeaders({
     'X-PORTINARI-SCREEN-LOCK': 'true'
@@ -24,8 +24,9 @@ export class PoPageDynamicService {
   getMetadata(type: string = 'list'): Observable<any> {
     const key = `${this.endpoint}-${type}-metadata`;
     const cache = JSON.parse(localStorage.getItem(key)) || {};
+    const metadataUrlBase = this.metadata || `${this.endpoint}/metadata`;
 
-    const url = `${this.endpoint}/${this.metadata}?type=${type}&version=${cache.version || ''}`;
+    const url = `${metadataUrlBase}?type=${type}&version=${cache.version || ''}`;
 
     return this.http.get(url).pipe(map((response: any) => {
       if (response.version === cache.version) {
