@@ -266,15 +266,13 @@ export class PoPageDynamicEditComponent implements OnInit {
     const paramId = this.activatedRoute.snapshot.params['id'];
     const duplicate = this.activatedRoute.snapshot.queryParams['duplicate'];
 
-    if (this.activatedRoute.snapshot.data.serviceApi) {
-      this.serviceApi = this.activatedRoute.snapshot.data.serviceApi;
+    const { serviceApi, serviceMetadataApi } = this.activatedRoute.snapshot.data;
+    this.serviceApi = serviceApi || this.serviceApi;
+    this.poPageDynamicService.configServiceApi({ endpoint: this.serviceApi, metadata: serviceMetadataApi });
 
-      this.poPageDynamicService.configServiceApi({ endpoint: this.serviceApi });
-
+    if (serviceApi) {
       this.loadMetadata(paramId, duplicate);
     } else {
-      this.poPageDynamicService.configServiceApi({ endpoint: this.serviceApi });
-
       this.loadData(paramId, duplicate);
     }
   }
